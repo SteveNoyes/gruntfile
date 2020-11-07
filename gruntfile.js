@@ -4,6 +4,11 @@ module.exports = function(grunt) {
   grunt.loadNpmTasks('grunt-contrib-uglify');
   grunt.loadNpmTasks('grunt-contrib-concat');
   grunt.loadNpmTasks('grunt-contrib-cssmin');
+  grunt.loadNpmTasks('grunt-contrib-jshint');
+  grunt.loadNpmTasks('grunt-contrib-imagemin');
+
+  const mozjpeg = require('imagemin-mozjpeg');
+  const optipng = require('imagemin-optipng');
 
   const sass = require('node-sass');
   require('load-grunt-tasks')(grunt);
@@ -13,15 +18,19 @@ module.exports = function(grunt) {
 
     concat: {
       dist: {
-        src: ['intro.js', 'project.js'],
-        dest: 'script.js',
+        src: ['js/app.js', 'js/main.js'],
+        dest: 'js/script.js',
       },
+    },
+    jshint: {
+      beforeconcat: ['js/app.js', 'js/main.js'],
+      afterconcat: ['js/script.js']
     },
 
     uglify: {
        my_target: {
          files: {
-           'script.min.js': ['script.js']
+           'dist/script.min.js': ['js/script.js']
          }
        }
      },
@@ -34,7 +43,7 @@ module.exports = function(grunt) {
         },
         dist: {
             files: {
-                'style.css': 'style.scss'
+                'css/style.css': 'scss/style.scss'
             }
         }
     },
@@ -42,10 +51,37 @@ module.exports = function(grunt) {
     cssmin: {
       target: {
         files: [{
-          src: ['style.css'],
-          dest: 'style.min.css'
+          src: ['css/style.css'],
+          dest: 'dist/style.min.css'
         }]
       }
+    },
+
+    imagemin: {
+        // static: {
+        // options: {
+        //     optimizationLevel: 3,
+        //     use: [mozjpeg()] // Example plugin usage
+        // },
+        //     files: {
+        //         'dist/img/one.min.jpg': 'img/one.jpg',
+        //         'dist/img/two.min.jpg': 'img/two.jpg',
+        //         'dist/img/three.min.jpg': 'img/three.jpg'
+        //     }
+        // }
+        dynamic: {
+          options: {
+              optimizationLevel: 3,
+              use: [mozjpeg()],
+              use: [optipng()]
+          },
+            files: [{
+                expand: true,
+                cwd: 'img/',
+                src: ['**/*.{png,jpg,gif,svg}'],
+                dest: 'dist/img'
+            }]
+        }
     },
 
     watch: {
@@ -54,17 +90,17 @@ module.exports = function(grunt) {
         interrupt: true
       },
       js: {
-        files: ['intro.js', 'project.js'],
+        files: ['js/app.js', 'js/main.js'],
         tasks: ['concat', 'uglify']
       },
 
       sass: {
-        files: ['style.scss'],
+        files: ['scss/_base.scss', 'scss/_main.scss', 'scss/_variables.scss'],
         tasks: ['sass']
       },
 
      css: {
-       files: ['style.css'],
+       files: ['css/style.css'],
        tasks: ['cssmin']
      }
    }
